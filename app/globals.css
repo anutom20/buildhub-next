@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f7f6f3;
+  --foreground: #333333;
+  --primary: #6a0dad; /* Deep Purple */
+  --darkPrimary: #4b086b; /* Dark Purple */
+  --lightPrimary: #c199d9; /* Light Purple */
+  --veryLightPrimary: #e7d8f1; /* Very light version for hover */
+  --chatInput: #e9e7de;
+  --userChatInput: #eae6de;
+  --charcoal: #6d6d6d;
+  --darkBg: #e8e6dd;
+  --lightBg: #f2f1eb;
+  --darkCharcoal: #4d4d4d;
+  --hoverBg: #d0cec0;
+  --numbersBg: #b3b3b3;
+  --darkYellow: #facc14;
+}
+
+/* @media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+} */
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Figtree, Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
