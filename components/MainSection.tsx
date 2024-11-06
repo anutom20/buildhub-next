@@ -2,7 +2,7 @@
 import React from "react";
 import Phases from "./main/phases/Phases";
 import { useAppSelector } from "@/lib/hooks";
-import { phaseItemsMapping, viewNames } from "./static";
+import { phaseItemsMapping, viewNames } from "./Static";
 
 const MainSection = () => {
   const currentViewId = useAppSelector((state) => state.general.currentViewId);

@@ -2,14 +2,18 @@ import db from "@/lib/db";
 import { StatusCodes } from "http-status-codes";
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { updateContextBank } from "../../contextBank";
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
   try {
-    const { chatId, chatHistory } = await req.json();
+    const { projectName, projectId, chatId, chatHistory } = await req.json();
 
-    if (!chatId || !chatHistory) {
+    if (!chatId || !chatHistory || !projectName || !projectId) {
       return NextResponse.json(
-        { message: "chatId or summary or chat History is missing" },
+        {
+          message:
+            "either one of chatId , chatHistory , projectName or projectId is missing",
+        },
         { status: StatusCodes.BAD_REQUEST }
       );
     }
@@ -36,8 +40,11 @@ export async function POST(req: NextRequest, res: NextResponse) {
         summary,
       },
     });
+
+    await updateContextBank(projectId, projectName, summary, model);
+
     return NextResponse.json({
-      message: `chat summary added successfully to chatId = ${chatId}`,
+      message: `chat summary added successfully to chatId = ${chatId} , central context store updated`,
     });
   } catch (err) {
     console.log(err);

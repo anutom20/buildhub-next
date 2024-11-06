@@ -7,7 +7,7 @@ import {
   phasesSectionItems,
   otherSectionItems,
   mainSectionItems,
-} from "@/components/static";
+} from "@/components/Static";
 
 import User from "./User";
 import { useClickOutside } from "@/hooks/useClickOutside";

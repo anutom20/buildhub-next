@@ -18,7 +18,7 @@ import {
   updateChatMessages,
   updateStreamingBotSingleMessage,
 } from "@/lib/features/chat/chatSlice";
-import { viewNames } from "@/components/static";
+import { viewNames } from "@/components/Static";
 
 const Chat = ({ slug }: { slug: string }) => {
   const currentProject = useAppSelector(
@@ -48,6 +48,16 @@ const Chat = ({ slug }: { slug: string }) => {
 
   useEffect(() => {
     if (chatId) fetchChatHistory(chatId);
+    else {
+      dispatch(
+        setChatMessages([
+          {
+            user: "",
+            bot: "Hey there , i am here to help you identify the need , the 1st step , start by telling me your name",
+          },
+        ])
+      );
+    }
   }, [chatId]);
 
   useEffect(() => {
@@ -90,10 +100,12 @@ const Chat = ({ slug }: { slug: string }) => {
       const response = await axios.post("/api/chat/messages", { chatId });
       if (!response?.data?.chatHistory?.messages) {
         dispatch(
-          updateChatMessages({
-            user: "",
-            bot: "Hey there , i am here to help you identify the need , the 1st step , start by telling me your name",
-          })
+          setChatMessages([
+            {
+              user: "",
+              bot: "Hey there , i am here to help you identify the need , the 1st step , start by telling me your name",
+            },
+          ])
         );
       } else {
         dispatch(setChatMessages(response?.data?.chatHistory?.messages));
