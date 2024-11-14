@@ -41,7 +41,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    await updateContextBank(projectId, projectName, summary, model);
+    const chatMetadata = await db.chatMetadata.findUnique({
+      where: { chatId },
+    });
+
+    const curProject = await db.project.findUnique({
+      where: { id: projectId },
+      select: { central_context_bank: true },
+    });
+
+    await updateContextBank(
+      projectId,
+      projectName,
+      summary,
+      model,
+      chatMetadata?.chatName!,
+      curProject?.central_context_bank ?? ""
+    );
 
     return NextResponse.json({
       message: `chat summary added successfully to chatId = ${chatId} , central context store updated`,

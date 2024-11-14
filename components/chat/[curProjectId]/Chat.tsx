@@ -18,16 +18,22 @@ import {
   updateChatMessages,
   updateStreamingBotSingleMessage,
 } from "@/lib/features/chat/chatSlice";
-import { viewNames } from "@/components/Static";
+import { initialChatMessage, viewNames } from "@/components/Static";
 
-const Chat = ({ slug }: { slug: string }) => {
+const Chat = ({ params }: { params: { slug: string[] } }) => {
   const currentProject = useAppSelector(
     (state) => state.project.currentProject
   );
+
+  console.log(JSON.stringify(currentProject));
   const messages = useAppSelector((state) => state.chat.messages);
 
-  const chatName = slug;
   const dispatch = useAppDispatch();
+
+  const chatName = params.slug[1];
+  const curProjectId = params.slug[0];
+
+  console.log(curProjectId, chatName);
 
   const chatId = useAppSelector((state) => state.chat.chatId);
 
@@ -47,21 +53,18 @@ const Chat = ({ slug }: { slug: string }) => {
   }, [messages]);
 
   useEffect(() => {
-    if (chatId) fetchChatHistory(chatId);
+    if (chatId) fetchChatHistory(chatId, chatName);
     else {
-      dispatch(
-        setChatMessages([
-          {
-            user: "",
-            bot: "Hey there , i am here to help you identify the need , the 1st step , start by telling me your name",
-          },
-        ])
-      );
+      if (chatName === viewNames.IDENTIFY_A_NEED) {
+        dispatch(setChatMessages([initialChatMessage["identifyANeed"]]));
+      } else if (chatName === viewNames.VALIDATE_THE_NEED) {
+        dispatch(setChatMessages([initialChatMessage["validateTheNeed"]]));
+      }
     }
   }, [chatId]);
 
   useEffect(() => {
-    if (!currentProject?.name) fetchProjects();
+    if (!currentProject?.name) fetchProjects(curProjectId);
     else setLoading(false);
   }, []);
 
@@ -69,7 +72,7 @@ const Chat = ({ slug }: { slug: string }) => {
     const sync = async () => {
       if (messages.length > 1 && botMessageCompleted) {
         console.log(chatId);
-        await syncChatToDb(viewNames.IDENTIFY_A_NEED, chatId);
+        await syncChatToDb(chatName, chatId);
         if (!chatId) fetchChatMetadata(currentProject?.id, chatName);
       }
     };
@@ -78,16 +81,19 @@ const Chat = ({ slug }: { slug: string }) => {
 
   useEffect(() => {
     if (botMessageCompleted && updateSummary) {
-      updateSummaryInDb(chatId);
+      updateSummaryInDb(chatId, currentProject?.id, currentProject?.name);
     }
   }, [botMessageCompleted, updateSummary]);
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (curProjectId: string) => {
     try {
       const response = await axios.get("/api/project/all");
       dispatch(setProjects(response?.data?.projects));
-      dispatch(setCurrentProject(response?.data?.projects?.[0]));
-      fetchChatMetadata(response?.data?.projects?.[0]?.id, chatName);
+      const curProject = response?.data?.projects?.filter(
+        (project: any) => project.id === curProjectId
+      );
+      dispatch(setCurrentProject(curProject));
+      fetchChatMetadata(curProjectId, chatName);
     } catch (err) {
       console.log(err);
     } finally {
@@ -95,18 +101,15 @@ const Chat = ({ slug }: { slug: string }) => {
     }
   };
 
-  const fetchChatHistory = async (chatId: string) => {
+  const fetchChatHistory = async (chatId: string, chatName: string) => {
     try {
       const response = await axios.post("/api/chat/messages", { chatId });
       if (!response?.data?.chatHistory?.messages) {
-        dispatch(
-          setChatMessages([
-            {
-              user: "",
-              bot: "Hey there , i am here to help you identify the need , the 1st step , start by telling me your name",
-            },
-          ])
-        );
+        if (chatName === viewNames.IDENTIFY_A_NEED) {
+          dispatch(setChatMessages([initialChatMessage["identifyANeed"]]));
+        } else if (chatName === viewNames.VALIDATE_THE_NEED) {
+          dispatch(setChatMessages([initialChatMessage["validateTheNeed"]]));
+        }
       } else {
         dispatch(setChatMessages(response?.data?.chatHistory?.messages));
       }
@@ -128,7 +131,11 @@ const Chat = ({ slug }: { slug: string }) => {
     }
   };
 
-  const updateSummaryInDb = async (chatId: string) => {
+  const updateSummaryInDb = async (
+    chatId: string,
+    projectId: string,
+    projectName: string
+  ) => {
     try {
       let chatHistory = [];
 
@@ -139,6 +146,8 @@ const Chat = ({ slug }: { slug: string }) => {
       await axios.post("/api/chat/summary", {
         chatHistory,
         chatId,
+        projectId,
+        projectName,
       });
     } catch (err) {
       console.log(err);
@@ -167,12 +176,15 @@ const Chat = ({ slug }: { slug: string }) => {
     }
   };
 
-  const sendMessage = async (e: any) => {
+  const sendMessage = async (
+    e: any,
+    generateRedditSummary: boolean = false,
+    postUrl: string = ""
+  ) => {
     e.preventDefault();
     setBotMessageCompleted(false);
     setUpdateSummary(false);
-    if (!input) return;
-
+    if (!generateRedditSummary && !input) return;
     let history = [];
 
     for (const message of messages) {
@@ -180,16 +192,30 @@ const Chat = ({ slug }: { slug: string }) => {
       history.push({ role: "model", parts: [{ text: message.bot }] });
     }
 
-    dispatch(updateChatMessages({ user: input, bot: "" }));
+    dispatch(
+      updateChatMessages({
+        user: generateRedditSummary ? "generate reddit post summary" : input,
+        bot: "",
+      })
+    );
 
-    const prompt = input;
+    const prompt = generateRedditSummary
+      ? "generate reddit post summary"
+      : input;
     setInput("");
     if (chatDivRef.current) chatDivRef.current.textContent = "";
 
     try {
       const response = await fetch("/api/stream", {
         method: "POST",
-        body: JSON.stringify({ history, prompt, chatName }),
+        body: JSON.stringify({
+          generateRedditSummary,
+          postUrl,
+          history,
+          prompt,
+          chatName,
+          projectId: currentProject?.id,
+        }),
         headers: {
           "Content-Type": "application/json",
         },
@@ -249,7 +275,7 @@ const Chat = ({ slug }: { slug: string }) => {
                 </div>
               )}
               <div className="flex justify-start">
-                <ModelChat text={msg.bot} />
+                <ModelChat text={msg.bot} sendMessage={sendMessage} />
               </div>
             </div>
           ))}

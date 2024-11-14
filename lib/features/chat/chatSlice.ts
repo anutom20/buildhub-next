@@ -56,6 +56,9 @@ export const chatSlice = createSlice({
       };
       state.messages = updatedMessages;
     },
+    addSingleUserMessage: (state, action: PayloadAction<string>) => {
+      state.messages = [...state.messages, { user: action.payload, bot: "" }];
+    },
   },
 });
 
@@ -65,6 +68,7 @@ export const {
   setChatMessages,
   updateChatMessages,
   updateStreamingBotSingleMessage,
+  addSingleUserMessage,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

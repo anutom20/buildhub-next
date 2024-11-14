@@ -1,15 +1,25 @@
 import db from "@/lib/db";
-import { getContextBankTemplatePrompt } from "./template";
+import {
+  getContextBankTemplatePrompt,
+  updateContextBankTemplate,
+} from "./template";
 import { GenerativeModel } from "@google/generative-ai";
+import { mainChatNames } from "../stream/prompts";
 
 export const updateContextBank = async (
   projectId: string,
   projectName: string,
   summary: string,
-  model: GenerativeModel
+  model: GenerativeModel,
+  chatName: string,
+  prevContextBank: string = ""
 ) => {
   try {
-    const prompt = getContextBankTemplatePrompt(projectName, summary);
+    console.log(chatName);
+    const prompt =
+      chatName === mainChatNames[0]
+        ? getContextBankTemplatePrompt(projectName, summary, chatName)
+        : updateContextBankTemplate(prevContextBank, chatName, summary);
     const result = model.generateContent(prompt);
 
     const contextBankUpdatedText = (await result).response.text();

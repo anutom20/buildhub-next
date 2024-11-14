@@ -8,10 +8,12 @@ const Phases = ({
   heading,
   items,
   chatName,
+  curProjectId,
 }: {
   heading: string;
   chatName: string;
   items: PhaseItemOverviewProps[];
+  curProjectId: string;
 }) => {
   return (
     <div className="flex flex-col text-darkCharcoal space-y-6 justify-content mx-20">
@@ -26,7 +28,7 @@ const Phases = ({
         <button
           className="flex max-w-fit justify-between bg-primary items-center transition hover:bg-darkPrimary text-white font-bold py-4 px-8 rounded-lg relative"
           onClick={() => {
-            window.location.href = `/chat/${chatName}`;
+            window.location.href = `/chat/${curProjectId}/${chatName}`;
           }}
         >
           View Phase

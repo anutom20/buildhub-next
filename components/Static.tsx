@@ -338,6 +338,17 @@ const postLaunchItems = [
   },
 ];
 
+const initialChatMessage = {
+  identifyANeed: {
+    user: "",
+    bot: "Hey there , i am here to help you identify the need , this is the 1st step , start by telling me your name",
+  },
+  validateTheNeed: {
+    user: "",
+    bot: "Hey there , i am here to help you validate the need  , this is the 2nd step , tell me if you're ready to begin",
+  },
+};
+
 const phaseItemsMapping = {
   identifyANeed: identifyANeedItems,
   validateTheNeed: validateTheNeedItems,
@@ -352,6 +363,7 @@ const phaseItemsMapping = {
 };
 
 export {
+  initialChatMessage,
   mainSectionItems,
   phasesSectionItems,
   otherSectionItems,
