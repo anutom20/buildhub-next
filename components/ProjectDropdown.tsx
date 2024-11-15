@@ -7,11 +7,13 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 type ProjectDropdown = {
   openModal: () => void;
+  openDeleteModal: () => void;
   setShowDropdown: React.Dispatch<SetStateAction<boolean>>;
 };
 
 const ProjectDropdown: React.FC<ProjectDropdown> = ({
   openModal,
+  openDeleteModal,
   setShowDropdown,
 }) => {
   const currentProject = useAppSelector(
@@ -66,7 +68,10 @@ const ProjectDropdown: React.FC<ProjectDropdown> = ({
         <button className="px-2 py-1 hover:bg-hoverBg border-none w-full rounded-md text-left">
           Rename Project
         </button>
-        <button className="px-2 py-1 hover:bg-hoverBg border-none w-full rounded-md text-left text-red-500">
+        <button
+          className="px-2 py-1 hover:bg-hoverBg border-none w-full rounded-md text-left text-red-500"
+          onClick={openDeleteModal}
+        >
           Delete Project
         </button>
       </div>

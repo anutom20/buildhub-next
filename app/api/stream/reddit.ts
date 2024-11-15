@@ -16,13 +16,12 @@ export async function* redditSearch(
       `
     );
 
-    const question = `Is ${result.response.text()} a good business idea`;
-    const keyphrase = result.response.text();
+    const question = result.response.text();
 
     console.log("reddit_question", question);
 
     const response = await axios.get(
-      `${process.env.REDDIT_API_BASE_URL}/get_posts_by_query?question=${question}&keyphrase=${keyphrase}`
+      `${process.env.REDDIT_API_BASE_URL}/get_posts_by_query?question=${question}`
     );
 
     yield JSON.stringify(response?.data?.posts);

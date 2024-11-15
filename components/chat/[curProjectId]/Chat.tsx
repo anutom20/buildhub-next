@@ -33,8 +33,6 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
   const chatName = params.slug[1];
   const curProjectId = params.slug[0];
 
-  console.log(curProjectId, chatName);
-
   const chatId = useAppSelector((state) => state.chat.chatId);
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -42,6 +40,7 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
   const [botMessageCompleted, setBotMessageCompleted] =
     useState<boolean>(false);
   const [updateSummary, setUpdateSummary] = useState<boolean>(false);
+  const [updateUserPersona, setUpdateUserPersona] = useState<boolean>(false);
 
   const chatDivRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -55,11 +54,7 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
   useEffect(() => {
     if (chatId) fetchChatHistory(chatId, chatName);
     else {
-      if (chatName === viewNames.IDENTIFY_A_NEED) {
-        dispatch(setChatMessages([initialChatMessage["identifyANeed"]]));
-      } else if (chatName === viewNames.VALIDATE_THE_NEED) {
-        dispatch(setChatMessages([initialChatMessage["validateTheNeed"]]));
-      }
+      setInitialMessages(chatName);
     }
   }, [chatId]);
 
@@ -85,6 +80,12 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
     }
   }, [botMessageCompleted, updateSummary]);
 
+  useEffect(() => {
+    if (botMessageCompleted && updateUserPersona) {
+      userPersona();
+    }
+  }, [botMessageCompleted, updateUserPersona]);
+
   const fetchProjects = async (curProjectId: string) => {
     try {
       const response = await axios.get("/api/project/all");
@@ -92,7 +93,7 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
       const curProject = response?.data?.projects?.filter(
         (project: any) => project.id === curProjectId
       );
-      dispatch(setCurrentProject(curProject));
+      dispatch(setCurrentProject(curProject[0]));
       fetchChatMetadata(curProjectId, chatName);
     } catch (err) {
       console.log(err);
@@ -104,17 +105,26 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
   const fetchChatHistory = async (chatId: string, chatName: string) => {
     try {
       const response = await axios.post("/api/chat/messages", { chatId });
+      console.log(chatName, viewNames.SOLUTION_IDEATION);
       if (!response?.data?.chatHistory?.messages) {
-        if (chatName === viewNames.IDENTIFY_A_NEED) {
-          dispatch(setChatMessages([initialChatMessage["identifyANeed"]]));
-        } else if (chatName === viewNames.VALIDATE_THE_NEED) {
-          dispatch(setChatMessages([initialChatMessage["validateTheNeed"]]));
-        }
+        setInitialMessages(chatName);
       } else {
         dispatch(setChatMessages(response?.data?.chatHistory?.messages));
       }
     } catch (err) {
       console.log(err);
+    }
+  };
+
+  const setInitialMessages = (chatName: string) => {
+    if (chatName === viewNames.IDENTIFY_A_NEED) {
+      dispatch(setChatMessages([initialChatMessage["identifyANeed"]]));
+    } else if (chatName === viewNames.VALIDATE_THE_NEED) {
+      dispatch(setChatMessages([initialChatMessage["validateTheNeed"]]));
+    } else if (chatName === viewNames.SOLUTION_IDEATION) {
+      dispatch(setChatMessages([initialChatMessage["solutionIdeation"]]));
+    } else if (chatName === viewNames.AUDIENCE_TARGETING) {
+      dispatch(setChatMessages([initialChatMessage["audienceTargeting"]]));
     }
   };
 
@@ -129,6 +139,13 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
     } catch (err) {
       console.log(err);
     }
+  };
+
+  const userPersona = async () => {
+    const response = await axios.post("/api/persona", {
+      chatHistory: messages,
+    });
+    console.log(response?.data);
   };
 
   const updateSummaryInDb = async (
@@ -240,6 +257,11 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
           if (chunkedMessage?.includes("UPDATE_SUMMARY")) {
             setUpdateSummary(true);
             chunkedMessage = chunkedMessage?.replace("UPDATE_SUMMARY", "");
+          }
+
+          if (chunkedMessage?.includes("UPDATE_USER_PERSONA")) {
+            setUpdateUserPersona(true);
+            chunkedMessage = chunkedMessage?.replace("UPDATE_USER_PERSONA", "");
           }
 
           dispatch(

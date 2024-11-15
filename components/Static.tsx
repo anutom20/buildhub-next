@@ -186,8 +186,14 @@ const solutionIdeationItems = [
   {
     icon: <TbLayersDifference size={iconSize} />,
     heading: "Differentiation",
-    desc: "A basic outline of how your solution will work.",
+    desc: "Clarify how your solution is different from existing alternatives.",
     special: false,
+  },
+  {
+    icon: <FaBrain size={iconSize} />,
+    heading: "Reasoning",
+    desc: "Brainstorm potential solutions to the validated need using our reasoning AI.",
+    special: true,
   },
 ];
 
@@ -346,6 +352,14 @@ const initialChatMessage = {
   validateTheNeed: {
     user: "",
     bot: "Hey there , i am here to help you validate the need  , this is the 2nd step , tell me if you're ready to begin",
+  },
+  solutionIdeation: {
+    user: "",
+    bot: "Hey there , i am here to help you with the solution ideation  , this is the 3rd step , tell me if you're ready to begin",
+  },
+  audienceTargeting: {
+    user: "",
+    bot: "Hey there , i am here to help you with the audience targeting  , this is the 4th step , tell me if you're ready to begin. We will also be creating your user persona in this step",
   },
 };
 

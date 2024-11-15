@@ -16,7 +16,7 @@ const Overview = ({
   specialTools?: boolean;
 }) => {
   return (
-    <div className="px-6 py-8 max-w-md flex flex-col space-y-6 bg-lightBg shadow-md rounded-xl justify-content">
+    <div className="px-6 py-8 max-w-md flex flex-col space-y-6 bg-gray-50 shadow-md rounded-xl justify-content">
       <div className="flex gap-2 items-center">
         <span className="text-primary">
           {specialTools ? <FaTools size={28} /> : <FaLightbulb size={28} />}

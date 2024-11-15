@@ -23,10 +23,12 @@ model User {
 model Project {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   central_context_bank    String?
+  user_persona            Json?
   name        String    
   userId      String    @db.ObjectId
   user        User      @relation(fields: [userId] , references: [id] , onDelete : Cascade)
   chatMetadata  ChatMetadata[]
+  chats         Chats[]
 }
 
 model Account {
@@ -66,6 +68,9 @@ model Chats {
   id             String  @id @default(auto()) @map("_id") @db.ObjectId
   messages       Json[]
   summary        String?
+  projectId      String?  @db.ObjectId
+
+  project        Project?  @relation(fields: [projectId] , references: [id] , onDelete : Cascade) 
 
   chatMetadata   ChatMetadata[]
 }

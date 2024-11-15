@@ -20,6 +20,7 @@ import {
   setProjects,
 } from "@/lib/features/project/projectSlice";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
+import DeleteProjectModal from "./modal/DeleteProjectModal";
 
 type Sidebar = {
   user: any;
@@ -27,6 +28,8 @@ type Sidebar = {
 const Sidebar: React.FC<Sidebar> = ({ user }) => {
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [showCreateProjectModal, setShowCreateProjectModal] =
+    useState<boolean>(false);
+  const [showDeleteProjectModal, setShowDeleteProjectModal] =
     useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -56,7 +59,9 @@ const Sidebar: React.FC<Sidebar> = ({ user }) => {
   };
 
   const cancelModal = () => setShowCreateProjectModal(false);
+  const cancelDeleteModal = () => setShowDeleteProjectModal(false);
   const openModal = () => setShowCreateProjectModal(true);
+  const openDeleteModal = () => setShowDeleteProjectModal(true);
 
   const dropdownRef = useRef(null);
   useClickOutside(dropdownRef, () => setShowDropdown(false));
@@ -87,6 +92,7 @@ const Sidebar: React.FC<Sidebar> = ({ user }) => {
           {showDropdown && (
             <ProjectDropdown
               openModal={openModal}
+              openDeleteModal={openDeleteModal}
               setShowDropdown={setShowDropdown}
             />
           )}
@@ -100,6 +106,13 @@ const Sidebar: React.FC<Sidebar> = ({ user }) => {
       <User image={user?.image} name={user?.name} email={user?.email} />
       {showCreateProjectModal && (
         <CreateProjectModal cancelModal={cancelModal} />
+      )}
+      {showDeleteProjectModal && (
+        <DeleteProjectModal
+          cancelModal={cancelDeleteModal}
+          projectId={currentProject?.id}
+          projectName={currentProject?.name}
+        />
       )}
     </section>
   );

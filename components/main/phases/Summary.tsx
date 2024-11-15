@@ -32,7 +32,7 @@ const Summary = () => {
     }
   };
   return (
-    <div className="shadow-lg rounded-xl flex flex-col p-6 space-y-3 bg-lightBg w-full">
+    <div className="shadow-lg rounded-xl flex flex-col p-6 space-y-3 bg-gray-50 w-full">
       <div className="flex gap-2 items-center">
         <div className="text-primary">
           <CgNotes size={24} />

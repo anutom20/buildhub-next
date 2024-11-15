@@ -1,8 +1,11 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import Overview from "./Overview";
 import Summary from "./Summary";
 import { PhaseItemOverviewProps } from "./Overview";
+import { useAppSelector } from "@/lib/hooks";
+import UserPersona from "@/components/UserPersona";
+import { viewNames } from "@/components/Static";
 
 const Phases = ({
   heading,
@@ -15,6 +18,7 @@ const Phases = ({
   items: PhaseItemOverviewProps[];
   curProjectId: string;
 }) => {
+  const currentViewId = useAppSelector((state) => state.general.currentViewId);
   return (
     <div className="flex flex-col text-darkCharcoal space-y-6 justify-content mx-20">
       <h1 className="flex items-center font-bold text-4xl">{heading}</h1>
@@ -35,6 +39,7 @@ const Phases = ({
         </button>
       </div>
       <Summary />
+      {currentViewId === viewNames.AUDIENCE_TARGETING && <UserPersona />}
     </div>
   );
 };

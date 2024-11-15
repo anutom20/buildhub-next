@@ -3,6 +3,7 @@ import React from "react";
 import Phases from "./main/phases/Phases";
 import { useAppSelector } from "@/lib/hooks";
 import { phaseItemsMapping, viewNames } from "./Static";
+import UserPersona from "./UserPersona";
 
 const MainSection = () => {
   const currentViewId = useAppSelector((state) => state.general.currentViewId);
@@ -11,7 +12,7 @@ const MainSection = () => {
   );
 
   return (
-    <main className="w-full min-h-screen h-full px-6 py-8 blur-background">
+    <main className="w-full min-h-screen h-full px-6 py-8 blur-background h-screen overflow-y-auto">
       {currentViewId === viewNames.IDENTIFY_A_NEED ? (
         <Phases
           heading="Identify a need"
