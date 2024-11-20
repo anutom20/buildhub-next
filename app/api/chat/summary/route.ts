@@ -20,17 +20,32 @@ export async function POST(req: NextRequest) {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
+    let result;
 
-    const chat = model.startChat({
-      history: chatHistory,
-    });
+    let successfulModel;
 
-    const result = await chat.sendMessage(
-      `Generate a brief summary of the chat in a very structured manner. include points and whatever you feel makes the summary good and concise. Don't include heading or anything like chat summary which makes it apparent that it's a chat summary`
-    );
+    for (const modelName of models) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
 
-    const summary = result?.response?.text();
+        successfulModel = model;
+
+        const chat = model.startChat({
+          history: chatHistory,
+        });
+
+        result = await chat.sendMessage(
+          `Generate a brief summary of the chat in a very structured manner. include points and whatever you feel makes the summary good and concise. Don't include heading or anything like chat summary which makes it apparent that it's a chat summary`
+        );
+
+        break;
+      } catch (error: any) {
+        console.error(`Error with model ${modelName}:`, error?.statusText);
+      }
+    }
+
+    const summary = result?.response?.text() ?? "";
 
     await db.chats.update({
       where: {
@@ -54,7 +69,7 @@ export async function POST(req: NextRequest) {
       projectId,
       projectName,
       summary,
-      model,
+      successfulModel,
       chatMetadata?.chatName!,
       curProject?.central_context_bank ?? ""
     );

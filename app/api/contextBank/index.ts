@@ -10,11 +10,14 @@ export const updateContextBank = async (
   projectId: string,
   projectName: string,
   summary: string,
-  model: GenerativeModel,
+  model: GenerativeModel | undefined,
   chatName: string,
   prevContextBank: string = ""
 ) => {
   try {
+    if (!model) {
+      return;
+    }
     console.log(chatName);
     const prompt =
       chatName === mainChatNames[0]

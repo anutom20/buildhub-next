@@ -361,6 +361,26 @@ const initialChatMessage = {
     user: "",
     bot: "Hey there , i am here to help you with the audience targeting  , this is the 4th step , tell me if you're ready to begin. We will also be creating your user persona in this step",
   },
+  marketValidation: {
+    user: "",
+    bot: "Hey there , i am here to help you with market validation  , this is the 5th step , tell me if you're ready to begin",
+  },
+  mVPFeatures: {
+    user: "",
+    bot: "Hey there , i am here to help you with defining the mVP features  , this is the 6th step , tell me if you're ready to begin",
+  },
+  mVPDevelopment: {
+    user: "",
+    bot: "Hey there , i am here to help you plan the MVP development  , this is the 7th step , tell me if you're ready to begin",
+  },
+  mVPLaunch: {
+    user: "",
+    bot: "Hey there , i am here to help you plan the MVP launch  , this is the 8th step , tell me if you're ready to begin",
+  },
+  postLaunch: {
+    user: "",
+    bot: "Hey there , i am here to help you with post-launch actions  , this is the 9th step , tell me if you're ready to begin",
+  },
 };
 
 const phaseItemsMapping = {

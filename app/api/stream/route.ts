@@ -7,6 +7,7 @@ import {
 import llmPrompts, { mainChatNames } from "./prompts";
 import db from "@/lib/db";
 import { redditSearch, redditSummary } from "./reddit";
+import { StatusCodes } from "http-status-codes";
 
 export async function POST(req: NextRequest, res: NextResponse) {
   try {
@@ -62,7 +63,9 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
+    const modelIndex = Math.floor(Math.random() * models.length); // Randomly select a model
+    const model = genAI.getGenerativeModel({ model: models[modelIndex] });
 
     let initialPromptHistory: any[] = [];
 
@@ -101,24 +104,44 @@ export async function POST(req: NextRequest, res: NextResponse) {
       summaryPrompt = await redditSummary(postUrl);
     }
 
-    const chat = model.startChat({
-      history: chatHistory,
-    });
-
     const finalPrompt = summaryPrompt
       ? `${summaryPrompt} . 
       Then continue the conversation by saying something small that makes user think that you're still there guiding them`
       : prompt;
 
-    const result = await chat.sendMessageStream(finalPrompt);
+    let result;
+
+    for (const modelName of models) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+
+        const chat = model.startChat({ history: chatHistory });
+        result = await chat.sendMessageStream(finalPrompt);
+
+        break;
+      } catch (error: any) {
+        console.error(`Error with model ${modelName}:`, error?.statusText);
+      }
+    }
+
+    if (!result) {
+      return NextResponse.json(
+        { message: "An error occured. Please try again" },
+        { status: StatusCodes.INTERNAL_SERVER_ERROR }
+      );
+    }
 
     const stream = makeStream(readStreamFromGemini(result));
     const response = new StreamingResponse(stream);
     return response;
-  } catch (err) {
-    return NextResponse.json({
-      message: `An error occured while streaming = ${err}`,
-    });
+  } catch (err: any) {
+    console.log(err);
+    return NextResponse.json(
+      {
+        message: "An unexpected error occured. Please try again",
+      },
+      { status: StatusCodes.INTERNAL_SERVER_ERROR }
+    );
   }
 }
 

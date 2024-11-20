@@ -41,9 +41,16 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
     useState<boolean>(false);
   const [updateSummary, setUpdateSummary] = useState<boolean>(false);
   const [updateUserPersona, setUpdateUserPersona] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const chatDivRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (currentProject?.id) {
+      fetchChatMetadata(currentProject?.id, chatName);
+    }
+  }, [chatName]);
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -59,7 +66,7 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
   }, [chatId]);
 
   useEffect(() => {
-    if (!currentProject?.name) fetchProjects(curProjectId);
+    if (!currentProject?.id) fetchProjects(curProjectId);
     else setLoading(false);
   }, []);
 
@@ -82,7 +89,7 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
 
   useEffect(() => {
     if (botMessageCompleted && updateUserPersona) {
-      userPersona();
+      userPersona(currentProject?.id);
     }
   }, [botMessageCompleted, updateUserPersona]);
 
@@ -105,7 +112,6 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
   const fetchChatHistory = async (chatId: string, chatName: string) => {
     try {
       const response = await axios.post("/api/chat/messages", { chatId });
-      console.log(chatName, viewNames.SOLUTION_IDEATION);
       if (!response?.data?.chatHistory?.messages) {
         setInitialMessages(chatName);
       } else {
@@ -125,6 +131,16 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
       dispatch(setChatMessages([initialChatMessage["solutionIdeation"]]));
     } else if (chatName === viewNames.AUDIENCE_TARGETING) {
       dispatch(setChatMessages([initialChatMessage["audienceTargeting"]]));
+    } else if (chatName === viewNames.MARKET_VALIDATION) {
+      dispatch(setChatMessages([initialChatMessage["marketValidation"]]));
+    } else if (chatName === viewNames.MVP_FEATURES) {
+      dispatch(setChatMessages([initialChatMessage["mVPFeatures"]]));
+    } else if (chatName === viewNames.MVP_DEVELOPMENT) {
+      dispatch(setChatMessages([initialChatMessage["mVPDevelopment"]]));
+    } else if (chatName === viewNames.MVP_LAUNCH) {
+      dispatch(setChatMessages([initialChatMessage["mVPLaunch"]]));
+    } else if (chatName === viewNames.POST_LAUNCH) {
+      dispatch(setChatMessages([initialChatMessage["postLaunch"]]));
     }
   };
 
@@ -141,9 +157,10 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
     }
   };
 
-  const userPersona = async () => {
+  const userPersona = async (projectId: string) => {
     const response = await axios.post("/api/persona", {
       chatHistory: messages,
+      projectId,
     });
     console.log(response?.data);
   };
@@ -201,6 +218,7 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
     e.preventDefault();
     setBotMessageCompleted(false);
     setUpdateSummary(false);
+    setErrorMessage(null);
     if (!generateRedditSummary && !input) return;
     let history = [];
 
@@ -237,6 +255,14 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
           "Content-Type": "application/json",
         },
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData?.message || "An unexpected error occured. Please try again"
+        );
+      }
+
       const reader = response?.body?.getReader();
 
       if (!reader) return;
@@ -276,6 +302,18 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
       }
     } catch (err) {
       console.log(err);
+      console.log(typeof err);
+      const errorMessage =
+        (err as Error)?.message || "An unknown error occurred.";
+      if (errorMessage.includes("StreamError")) {
+        setErrorMessage(errorMessage);
+        if (messages.length > 0) {
+          const currentMessages = messages.slice(0, messages.length + 1);
+          dispatch(setChatMessages(currentMessages));
+        }
+      } else {
+        setErrorMessage("An unexpected Error occured . Please try again.");
+      }
     }
   };
 
@@ -334,6 +372,14 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
           Makerhub can make mistakes. Check important info
         </span>
       </div>
+      {errorMessage && (
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 w-1/2 mx-auto"
+          role="alert"
+        >
+          <p className="font-semibold">{errorMessage}</p>
+        </div>
+      )}
     </div>
   );
 };

@@ -3,7 +3,6 @@ import React from "react";
 import Phases from "./main/phases/Phases";
 import { useAppSelector } from "@/lib/hooks";
 import { phaseItemsMapping, viewNames } from "./Static";
-import UserPersona from "./UserPersona";
 
 const MainSection = () => {
   const currentViewId = useAppSelector((state) => state.general.currentViewId);

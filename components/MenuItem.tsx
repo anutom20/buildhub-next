@@ -24,7 +24,7 @@ const MenuItem: React.FC<MenuItem> = ({ icon, text, type, number, name }) => {
           : "hover:bg-veryLightPrimary"
       } cursor-pointer flex justify-between px-2 py-1 relative rounded-md active:bg-red-500 transition w-full`}
     >
-      <a href="#" className="flex justify-content items-center gap-2">
+      <a className="flex justify-content items-center gap-2">
         <span>{icon}</span>
         <span>{text}</span>
       </a>

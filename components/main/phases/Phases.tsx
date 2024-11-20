@@ -6,6 +6,7 @@ import { PhaseItemOverviewProps } from "./Overview";
 import { useAppSelector } from "@/lib/hooks";
 import UserPersona from "@/components/UserPersona";
 import { viewNames } from "@/components/Static";
+import { useRouter } from "next/navigation";
 
 const Phases = ({
   heading,
@@ -19,6 +20,7 @@ const Phases = ({
   curProjectId: string;
 }) => {
   const currentViewId = useAppSelector((state) => state.general.currentViewId);
+  const router = useRouter();
   return (
     <div className="flex flex-col text-darkCharcoal space-y-6 justify-content mx-20">
       <h1 className="flex items-center font-bold text-4xl">{heading}</h1>
@@ -32,7 +34,7 @@ const Phases = ({
         <button
           className="flex max-w-fit justify-between bg-primary items-center transition hover:bg-darkPrimary text-white font-bold py-4 px-8 rounded-lg relative"
           onClick={() => {
-            window.location.href = `/chat/${curProjectId}/${chatName}`;
+            router.push(`/chat/${curProjectId}/${chatName}`);
           }}
         >
           View Phase
