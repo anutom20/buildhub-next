@@ -47,6 +47,7 @@ const CreateProjectModal: React.FC<CreateProjectModal> = ({ cancelModal }) => {
       console.log(err);
     }
   };
+
   return (
     <section className="z-30 bg-opacity-50 bg-black backdrop-blur-sm fixed w-full h-full inset-0 flex justify-center items-center">
       <div className="bg-background shadow-lg p-8 rounded-lg pr-12 flex flex-col w-fit space-y-3 relative">

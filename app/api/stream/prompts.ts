@@ -244,6 +244,11 @@ const prompts: { [key: string]: string } = {
 
         The user will let you know when he is ready and then ask questions 
         `,
+
+  normalChatPromptUseProjectMemory: `${globalContext}.
+      You are given a context of the whole situation below
+      {{context_of_prev_steps}}
+      answer the user's question based on the context provided`,
 };
 
 export const userPersonaPrompt = (chatHistory: any[]) => {
@@ -277,7 +282,6 @@ export const mainChatNames = [
   "marketValidation",
   "mVPFeatures",
   "mVPDevelopment",
-  "buildMVP",
   "mVPLaunch",
   "postLaunch",
 ];

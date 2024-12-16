@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import MenuItem from "./MenuItem";
+import { useAppSelector } from "@/lib/hooks";
 
 type Menu = {
   heading: string;

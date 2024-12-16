@@ -18,33 +18,86 @@ import {
   updateChatMessages,
   updateStreamingBotSingleMessage,
 } from "@/lib/features/chat/chatSlice";
-import { initialChatMessage, viewNames } from "@/components/Static";
+import {
+  initialChatMessage,
+  viewNames,
+  phaseNamesMapping,
+} from "@/components/Static";
+import { useRouter } from "next/navigation";
+import { FaCheck } from "react-icons/fa6";
+import { ToastContainer, toast } from "react-toastify";
+import Confetti from "react-confetti";
+import "react-toastify/dist/ReactToastify.css";
+import { useSearchParams } from "next/navigation";
 
-const Chat = ({ params }: { params: { slug: string[] } }) => {
+const Chat = ({
+  params,
+  image,
+}: {
+  params: { slug: string[] };
+  image: string;
+}) => {
   const currentProject = useAppSelector(
     (state) => state.project.currentProject
   );
 
+  const promptFromOverviewSection = useSearchParams().get("initialPrompt");
+
   console.log(JSON.stringify(currentProject));
   const messages = useAppSelector((state) => state.chat.messages);
 
+  const chatIdState = useAppSelector((state) => state.chat.chatId);
+  console.log("chatIdState", chatIdState);
+
+  console.log("messages", messages);
+
   const dispatch = useAppDispatch();
 
-  const chatName = params.slug[1];
+  let chatName = params.slug[1].replace(/%20/g, " ");
+
+  if (chatName?.includes(" ")) {
+    chatName = chatName
+      .split(" ")
+      .map((word, index) =>
+        index === 0
+          ? word.toLowerCase()
+          : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      )
+      .join("");
+  }
+  const normalChat = !Object.keys(phaseNamesMapping).some(
+    (name) => chatName === name
+  );
+
+  console.log(chatName);
   const curProjectId = params.slug[0];
+
+  let includeProjectHistory = false;
+
+  if (params.slug.length > 2) {
+    includeProjectHistory = params.slug[2] === "true";
+  }
 
   const chatId = useAppSelector((state) => state.chat.chatId);
 
   const [loading, setLoading] = useState<boolean>(true);
-  const [input, setInput] = useState<string>("");
+  const [input, setInput] = useState<string>(promptFromOverviewSection ?? "");
   const [botMessageCompleted, setBotMessageCompleted] =
     useState<boolean>(false);
   const [updateSummary, setUpdateSummary] = useState<boolean>(false);
   const [updateUserPersona, setUpdateUserPersona] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const [stepCompleted, setStepCompleted] = useState<boolean>(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+
   const chatDivRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const pageEndRef = useRef<HTMLDivElement>(null);
+
+  const router = useRouter();
+
+  console.log("input", input);
 
   useEffect(() => {
     if (currentProject?.id) {
@@ -59,11 +112,28 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
   }, [messages]);
 
   useEffect(() => {
-    if (chatId) fetchChatHistory(chatId, chatName);
-    else {
+    console.log("chatId useEffect", chatId, chatName, normalChat);
+    if (chatId) fetchChatHistory(chatName);
+    else if (!normalChat) {
+      console.log("setting initial messages");
       setInitialMessages(chatName);
+    } else {
+      console.log("setting chat messages to empty array");
+      dispatch(setChatMessages([]));
     }
   }, [chatId]);
+
+  useEffect(() => {
+    if (
+      promptFromOverviewSection &&
+      currentProject &&
+      chatName &&
+      input &&
+      messages.length === 0
+    ) {
+      sendMessage(new Event("submit"));
+    }
+  }, [currentProject, chatName, input]);
 
   useEffect(() => {
     if (!currentProject?.id) fetchProjects(curProjectId);
@@ -72,7 +142,8 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
 
   useEffect(() => {
     const sync = async () => {
-      if (messages.length > 1 && botMessageCompleted) {
+      const chatLength = normalChat ? 0 : 1;
+      if (messages.length > chatLength && botMessageCompleted) {
         console.log(chatId);
         await syncChatToDb(chatName, chatId);
         if (!chatId) fetchChatMetadata(currentProject?.id, chatName);
@@ -109,12 +180,14 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
     }
   };
 
-  const fetchChatHistory = async (chatId: string, chatName: string) => {
+  const fetchChatHistory = async (chatName: string) => {
     try {
+      console.log("fetching chat history", chatId);
       const response = await axios.post("/api/chat/messages", { chatId });
       if (!response?.data?.chatHistory?.messages) {
         setInitialMessages(chatName);
       } else {
+        console.log("setting chat messages in fetch chat history");
         dispatch(setChatMessages(response?.data?.chatHistory?.messages));
       }
     } catch (err) {
@@ -123,6 +196,7 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
   };
 
   const setInitialMessages = (chatName: string) => {
+    console.log("setting chat messages in setInitialMessages");
     if (chatName === viewNames.IDENTIFY_A_NEED) {
       dispatch(setChatMessages([initialChatMessage["identifyANeed"]]));
     } else if (chatName === viewNames.VALIDATE_THE_NEED) {
@@ -152,6 +226,7 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
         chatName,
         chatId,
       });
+      updateProjectCurrentPhase(chatName);
     } catch (err) {
       console.log(err);
     }
@@ -194,11 +269,14 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
         projectId,
         chatName,
       });
+      console.log("fetching chat metadata", response?.data);
       const chatMetadata = {
         chatId: response?.data?.chatMetadata?.chatId ?? "",
         chatName: response?.data?.chatMetadata?.chatName ?? "",
+        completed: response?.data?.chatMetadata?.completed ?? false,
       };
       dispatch(setChatMetadata(chatMetadata));
+      setStepCompleted(response?.data?.chatMetadata?.completed);
     } catch (err) {
       console.log(err);
     }
@@ -206,7 +284,43 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
 
   const handleChatInput = () => {
     if (chatDivRef.current) {
-      setInput(chatDivRef.current.textContent!);
+      let htmlString = chatDivRef.current.innerHTML;
+      htmlString = htmlString.replace(/&nbsp;/g, "");
+      setInput(htmlString);
+    }
+  };
+
+  const updateProjectCurrentPhase = async (chatName: string) => {
+    try {
+      await axios.patch("/api/project/updateProgress", {
+        chatName,
+        projectId: currentProject?.id,
+      });
+    } catch (error) {
+      console.error("Failed to update project progress:", error);
+    }
+  };
+
+  const markStepAsCompleted = async (chatId: string) => {
+    try {
+      setStepCompleted(true);
+      axios.patch("/api/chat/metadata", { chatId });
+      toast.success("Step successfully completed!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        draggable: true,
+        style: {
+          backgroundColor: "rgba(168, 240, 187)",
+          color: "var(--charcoal)",
+          borderRadius: "8px",
+        },
+      });
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -220,6 +334,14 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
     setUpdateSummary(false);
     setErrorMessage(null);
     if (!generateRedditSummary && !input) return;
+    dispatch(
+      updateChatMessages({
+        user: generateRedditSummary ? "generate reddit post summary" : input,
+        bot: "",
+      })
+    );
+    setInput("");
+
     let history = [];
 
     for (const message of messages) {
@@ -227,17 +349,9 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
       history.push({ role: "model", parts: [{ text: message.bot }] });
     }
 
-    dispatch(
-      updateChatMessages({
-        user: generateRedditSummary ? "generate reddit post summary" : input,
-        bot: "",
-      })
-    );
-
     const prompt = generateRedditSummary
       ? "generate reddit post summary"
       : input;
-    setInput("");
     if (chatDivRef.current) chatDivRef.current.textContent = "";
 
     try {
@@ -249,6 +363,7 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
           history,
           prompt,
           chatName,
+          includeProjectHistory,
           projectId: currentProject?.id,
         }),
         headers: {
@@ -282,6 +397,7 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
 
           if (chunkedMessage?.includes("UPDATE_SUMMARY")) {
             setUpdateSummary(true);
+            markStepAsCompleted(chatId);
             chunkedMessage = chunkedMessage?.replace("UPDATE_SUMMARY", "");
           }
 
@@ -309,6 +425,7 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
         setErrorMessage(errorMessage);
         if (messages.length > 0) {
           const currentMessages = messages.slice(0, messages.length + 1);
+          console.log("setting chat messages in error message");
           dispatch(setChatMessages(currentMessages));
         }
       } else {
@@ -321,15 +438,46 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
 
   return (
     <div>
-      <h1>Chatbot</h1>
-      <div className="mx-auto max-h-[80vh] overflow-y-auto">
+      {showConfetti && <Confetti />}
+      <ToastContainer />
+      <div className="flex items-center m-4 justify-between fixed top-0 left-0 right-0 z-10">
+        <button
+          onClick={() => router.back()}
+          className="text-primary flex items-center"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-7 w-7 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 12H3m0 0l6-6m-6 6l6 6"
+            />
+          </svg>
+          {!normalChat &&
+            `Return to ${
+              phaseNamesMapping[chatName as keyof typeof phaseNamesMapping]
+            }`}
+        </button>
+        <div className="flex justify-center items-center text-lg font-bold">
+          {phaseNamesMapping[chatName as keyof typeof phaseNamesMapping] ??
+            params.slug[1].replace(/%20/g, " ")}
+          {stepCompleted && <FaCheck className="ml-2 text-green-500" />}
+        </div>
+      </div>
+      <div className="mx-auto max-h-[85vh] mt-12 overflow-y-auto">
         <div
           id="chatContainer"
           className="mx-auto flex w-1/2 flex-col justify-content space-y-6"
         >
           {messages.map((msg, index) => (
             <div key={index} className="space-y-6">
-              {index !== 0 && (
+              {(index !== 0 || normalChat) && (
                 <div className="flex justify-end">
                   <UserChat text={msg.user} />
                 </div>
@@ -343,18 +491,44 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
         </div>
       </div>
       <div className="mt-12 mb-4 flex w-1/2 mx-auto flex-col gap-1">
+        {stepCompleted && chatName !== viewNames.POST_LAUNCH && (
+          <div className="bg-veryLightPrimary p-4 flex justify-between rounded-md items-center mb-2">
+            <span className="text-md text-charcoal">
+              Great job! You've completed this phase.
+            </span>
+            <button
+              className="bg-primary text-white px-4 py-2 rounded hover:bg-darkPrimary transition-all duration-300 ease-in-out"
+              onClick={() => {
+                router.push(
+                  `/chat/${currentProject?.id}/${
+                    Object.keys(phaseNamesMapping)[
+                      Object.keys(phaseNamesMapping).indexOf(chatName) + 1
+                    ]
+                  }`
+                );
+              }}
+            >
+              Next phase →
+            </button>
+          </div>
+        )}
         <form onSubmit={sendMessage} className="shadow-sm relative">
-          <div
-            ref={chatDivRef}
-            contentEditable
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                sendMessage(e);
-              }
-            }}
-            onInput={handleChatInput}
-            className="bg-chatInput border pr-12 border-gray-300 text-md rounded-lg focus:outline-none focus:border-gray-400 focus:border w-full p-2.5"
-          />
+          <div className="relative editable">
+            <div
+              ref={chatDivRef}
+              contentEditable
+              data-placeholder="Type your message here..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  sendMessage(e);
+                } else if (e.key === "Enter" && e.shiftKey) {
+                  pageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+              onInput={handleChatInput}
+              className="bg-chatInput border pr-12 border-gray-300 text-md rounded-lg focus:outline-none focus:border-gray-400 focus:border w-full p-2.5"
+            ></div>
+          </div>
           <button
             type="submit"
             className="absolute right-5 top-2"
@@ -369,8 +543,9 @@ const Chat = ({ params }: { params: { slug: string[] } }) => {
           </button>
         </form>
         <span className="text-xs text-charcoal text-center">
-          Makerhub can make mistakes. Check important info
+          Makerhub can make mistakes. Please check important information.
         </span>
+        <div className="mb-4" ref={pageEndRef}></div>
       </div>
       {errorMessage && (
         <div

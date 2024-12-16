@@ -53,7 +53,6 @@ const viewNames = {
   MARKET_VALIDATION: "marketValidation",
   MVP_FEATURES: "mVPFeatures",
   MVP_DEVELOPMENT: "mVPDevelopment",
-  BUILD_MVP: "buildMVP",
   MVP_LAUNCH: "mVPLaunch",
   POST_LAUNCH: "postLaunch",
 
@@ -63,8 +62,8 @@ const viewNames = {
 };
 
 const mainSectionItems = [
-  { icon: <BiDetail />, text: "Overview", name: "overview" },
-  { icon: <IoChatboxOutline />, text: "Chats", name: "chats" },
+  { icon: <BiDetail />, text: "Overview", name: viewNames.OVERVIEW },
+  { icon: <IoChatboxOutline />, text: "Chats", name: viewNames.CHATS },
   {
     icon: <BsBank />,
     text: "Central Context Bank",
@@ -108,7 +107,6 @@ const phasesSectionItems = [
     text: "Plan MVP Development",
     name: viewNames.MVP_DEVELOPMENT,
   },
-  { icon: <FaHammer />, text: "Build MVP", name: viewNames.BUILD_MVP },
   { icon: <SlRocket />, text: "Plan MVP Launch", name: viewNames.MVP_LAUNCH },
   {
     icon: <RiWechat2Line />,
@@ -281,27 +279,6 @@ const mVPDevelopmentItems = [
   },
 ];
 
-const buildMVPItems = [
-  {
-    icon: <IoIosSettings size={iconSize} />,
-    heading: "A functioning MVP",
-    desc: "A working MVP with core features ready to be used.",
-    special: false,
-  },
-  {
-    icon: <HiOutlinePuzzlePiece size={iconSize} />,
-    heading: "Problem-solution fit",
-    desc: "Confidence that your MVP addresses the core problem.",
-    special: false,
-  },
-  {
-    icon: <IoFlaskOutline size={iconSize} />,
-    heading: "Ready for user testing",
-    desc: "Assurance that your MVP is ready for initial user testing.",
-    special: false,
-  },
-];
-
 const mVPLaunchItems = [
   {
     icon: <PiRocketLaunch size={iconSize} />,
@@ -391,9 +368,20 @@ const phaseItemsMapping = {
   marketValidation: marketValidationItems,
   mVPFeatures: mVPFeaturesItems,
   mVPDevelopment: mVPDevelopmentItems,
-  buildMVP: buildMVPItems,
   mVPLaunch: mVPLaunchItems,
   postLaunch: postLaunchItems,
+};
+
+const phaseNamesMapping = {
+  identifyANeed: "Identify A Need",
+  validateTheNeed: "Validate The Need",
+  solutionIdeation: "Solution Ideation",
+  audienceTargeting: "Audience Targeting",
+  marketValidation: "Market Validation",
+  mVPFeatures: "MVP Features",
+  mVPDevelopment: "MVP Development",
+  mVPLaunch: "MVP Launch",
+  postLaunch: "Post Launch",
 };
 
 export {
@@ -402,5 +390,6 @@ export {
   phasesSectionItems,
   otherSectionItems,
   phaseItemsMapping,
+  phaseNamesMapping,
   viewNames,
 };

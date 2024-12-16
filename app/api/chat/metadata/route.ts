@@ -22,9 +22,37 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ chatMetadata });
   } catch (err) {
+    console.log(err);
     return NextResponse.json(
       {
         message: `An error = ${err} occured while getting chat metadata`,
+      },
+      { status: StatusCodes.INTERNAL_SERVER_ERROR }
+    );
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const { chatId } = await req.json();
+
+    if (!chatId) {
+      return NextResponse.json(
+        { message: "chatId is required" },
+        { status: StatusCodes.BAD_REQUEST }
+      );
+    }
+
+    const updatedChatMetadata = await db.chatMetadata.update({
+      where: { chatId },
+      data: { completed: true },
+    });
+
+    return NextResponse.json({ updatedChatMetadata });
+  } catch (err) {
+    return NextResponse.json(
+      {
+        message: `An error = ${err} occurred while updating chat metadata`,
       },
       { status: StatusCodes.INTERNAL_SERVER_ERROR }
     );

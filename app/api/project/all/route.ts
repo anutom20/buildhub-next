@@ -12,12 +12,16 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
       );
     }
 
+    console.log("userId", userId);
+
     const projects = await db.project.findMany({
       where: {
         userId,
       },
       select: { name: true, id: true },
     });
+
+    console.log("projects", projects);
 
     return NextResponse.json({ projects });
   } catch (err) {

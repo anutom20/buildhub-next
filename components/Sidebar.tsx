@@ -1,6 +1,6 @@
 "use client";
 import ProjectDropdown from "./ProjectDropdown";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import Menu from "./Menu";
 import { IoChevronDownOutline } from "react-icons/io5";
 import {
@@ -12,51 +12,26 @@ import {
 import User from "./User";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import CreateProjectModal from "./modal/CreateProjectModal";
-import { toast } from "react-toastify";
-import axios from "axios";
-
-import {
-  setCurrentProject,
-  setProjects,
-} from "@/lib/features/project/projectSlice";
-import { useAppSelector, useAppDispatch } from "@/lib/hooks";
+import { IoIosCloseCircleOutline } from "react-icons/io";
 import DeleteProjectModal from "./modal/DeleteProjectModal";
 
 type Sidebar = {
   user: any;
+  showSidebar: boolean;
+  setShowSidebar: (showSidebar: boolean) => void;
 };
-const Sidebar: React.FC<Sidebar> = ({ user }) => {
+import { useAppSelector } from "@/lib/hooks";
+
+const Sidebar: React.FC<Sidebar> = ({ user, showSidebar, setShowSidebar }) => {
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [showCreateProjectModal, setShowCreateProjectModal] =
     useState<boolean>(false);
   const [showDeleteProjectModal, setShowDeleteProjectModal] =
     useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
 
   const currentProject = useAppSelector((state) => {
     return state.project.currentProject;
   });
-
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    fetchAllProjects();
-  }, [currentProject]);
-
-  const fetchAllProjects = async () => {
-    try {
-      const response = await axios.get("/api/project/all");
-      if (!currentProject?.name)
-        dispatch(setCurrentProject(response?.data?.projects?.[0]));
-      dispatch(setProjects(response?.data?.projects));
-      console.log(response?.data?.projects);
-    } catch (err) {
-      console.log(err);
-      toast.error("Failed to fetch projects!");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const cancelModal = () => setShowCreateProjectModal(false);
   const cancelDeleteModal = () => setShowDeleteProjectModal(false);
@@ -66,16 +41,22 @@ const Sidebar: React.FC<Sidebar> = ({ user }) => {
   const dropdownRef = useRef(null);
   useClickOutside(dropdownRef, () => setShowDropdown(false));
 
-  if (loading) return <div>Loading...</div>;
-
   return (
-    <section className="w-[340px] min-h-screen h-full flex flex-col bg-ivory-100 shadow-md relative">
+    <section
+      className={`w-[340px] ${
+        showSidebar ? "block" : "hidden"
+      } xl:block min-h-screen h-[100vh] overflow-y-auto flex flex-col bg-[#f9f9f9] shadow-md relative`}
+    >
       <div className="p-4 flex justify-between">
         <h2 className="text-primary font-semibold text-xl">Makerhub</h2>
-        <div className="flex items-center">
-          <div className="flex items-center justify-center align w-6 h-6 rounded-full border border-2 text-primary font-bold text-sm">
-            5
-          </div>
+        <div
+          className="absolute top-4 right-4 cursor-pointer block xl:hidden"
+          onClick={() => setShowSidebar(false)}
+        >
+          <IoIosCloseCircleOutline
+            size={24}
+            className="text-darkCharcoal font-bold"
+          />
         </div>
       </div>
       <div ref={dropdownRef}>
@@ -98,12 +79,13 @@ const Sidebar: React.FC<Sidebar> = ({ user }) => {
           )}
         </div>
       </div>
-      <div className="max-h-[42vw] overflow-y-auto">
+      <div>
         <Menu heading="Main" items={mainSectionItems} />
         <Menu heading="Phases" items={phasesSectionItems} />
-        <Menu heading="Other" items={otherSectionItems} />
+        <div className="mb-4 mt-4">
+          <User image={user?.image} name={user?.name} email={user?.email} />
+        </div>
       </div>
-      <User image={user?.image} name={user?.name} email={user?.email} />
       {showCreateProjectModal && (
         <CreateProjectModal cancelModal={cancelModal} />
       )}

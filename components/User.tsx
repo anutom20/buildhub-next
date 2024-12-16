@@ -35,7 +35,7 @@ const User: React.FC<User> = ({ image, name, email }) => {
         <IoChevronDownOutline size={12} />
       </div>
       {showDropdown && (
-        <div className="absolute -top-28">
+        <div className="absolute -top-20">
           <UserDropdown />
         </div>
       )}

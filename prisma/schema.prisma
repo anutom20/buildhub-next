@@ -24,6 +24,7 @@ model Project {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   central_context_bank    String?
   user_persona            Json?
+  current_phase           String  @default("identifyANeed")
   name        String    
   userId      String    @db.ObjectId
   user        User      @relation(fields: [userId] , references: [id] , onDelete : Cascade)
@@ -57,7 +58,10 @@ model ChatMetadata {
   projectId      String  @db.ObjectId 
   userId         String  @db.ObjectId 
   chatId         String  @db.ObjectId @unique
-  chatName       String 
+  chatName       String
+  completed      Boolean?
+  createdAt      DateTime? @default(now())
+  includeProjectHistory Boolean? @default(false)
 
   user           User    @relation(fields : [userId] , references : [id] , onDelete : Cascade)
   chat           Chats   @relation(fields : [chatId] , references : [id] , onDelete : Cascade)

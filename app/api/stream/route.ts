@@ -18,6 +18,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
       projectId,
       history,
       chatName,
+      includeProjectHistory,
     }: {
       prompt: string;
       history: any[];
@@ -25,6 +26,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
       projectId: string;
       generateRedditSummary?: string;
       postUrl?: string;
+      includeProjectHistory?: boolean;
     } = await req.json();
 
     if (!prompt || !history || !projectId || !chatName) {
@@ -34,21 +36,33 @@ export async function POST(req: NextRequest, res: NextResponse) {
       );
     }
 
+    const normalChat: boolean = !mainChatNames.some(
+      (name) => chatName === name
+    );
+
     let needPrevStepContext = false,
       doRedditSearch = false;
 
     if (prompt.includes("do_reddit_search") && chatName === mainChatNames[1])
       doRedditSearch = true;
 
-    if (mainChatNames.slice(1).some((name) => chatName === name)) {
+    if (
+      mainChatNames.slice(1).some((name) => chatName === name) ||
+      (includeProjectHistory && normalChat)
+    ) {
       needPrevStepContext = true;
     }
 
-    let initialPrompt = llmPrompts[chatName];
+    let initialPrompt =
+      normalChat && includeProjectHistory
+        ? llmPrompts.normalChatPromptUseProjectMemory
+        : llmPrompts[chatName];
 
     let curProject;
 
     if (needPrevStepContext) {
+      if (normalChat) {
+      }
       curProject = await db.project.findUnique({
         where: {
           id: projectId,
@@ -86,7 +100,10 @@ export async function POST(req: NextRequest, res: NextResponse) {
       ];
     }
 
-    const chatHistory = [...initialPromptHistory, ...history];
+    const chatHistory =
+      normalChat && !includeProjectHistory
+        ? [...history]
+        : [...initialPromptHistory, ...history];
 
     if (doRedditSearch) {
       const stream = makeStream(
@@ -111,6 +128,10 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
     let result;
 
+    console.log("finalPrompt", finalPrompt);
+
+    console.log("chatHistory", chatHistory);
+
     for (const modelName of models) {
       try {
         const model = genAI.getGenerativeModel({ model: modelName });
@@ -120,7 +141,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
         break;
       } catch (error: any) {
-        console.error(`Error with model ${modelName}:`, error?.statusText);
+        console.error(`Error with model ${modelName}:`, error);
       }
     }
 

@@ -3,8 +3,11 @@ import React from "react";
 import Phases from "./main/phases/Phases";
 import { useAppSelector } from "@/lib/hooks";
 import { phaseItemsMapping, viewNames } from "./Static";
+import CentralContextBank from "./CentralContextBank";
+import MainOverview from "./main/MainOverview";
+import UserChats from "./UserChats";
 
-const MainSection = () => {
+const MainSection = ({ userName }: { userName: string }) => {
   const currentViewId = useAppSelector((state) => state.general.currentViewId);
   const currentProject = useAppSelector(
     (state) => state.project.currentProject
@@ -61,13 +64,6 @@ const MainSection = () => {
           chatName={viewNames.MVP_DEVELOPMENT}
           curProjectId={currentProject?.id}
         />
-      ) : currentViewId === viewNames.BUILD_MVP ? (
-        <Phases
-          heading="Build MVP"
-          items={phaseItemsMapping["buildMVP"]}
-          chatName={viewNames.BUILD_MVP}
-          curProjectId={currentProject?.id}
-        />
       ) : currentViewId === viewNames.MVP_LAUNCH ? (
         <Phases
           heading="Plan MVP Launch"
@@ -82,9 +78,13 @@ const MainSection = () => {
           chatName={viewNames.POST_LAUNCH}
           curProjectId={currentProject?.id}
         />
-      ) : (
-        ""
-      )}
+      ) : currentViewId === viewNames.CENTRAL_CONTEXT_BANK ? (
+        <CentralContextBank />
+      ) : currentViewId === viewNames.OVERVIEW ? (
+        <MainOverview name={userName} />
+      ) : currentViewId === viewNames.CHATS ? (
+        <UserChats />
+      ) : null}
     </main>
   );
 };

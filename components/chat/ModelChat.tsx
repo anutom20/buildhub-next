@@ -60,14 +60,14 @@ const ModelChat: React.FC<ModelChatProps> = ({ text, sendMessage }) => {
   };
 
   return (
-    <div className="px-3 py-5 bg-white shadow-sm rounded-xl leading-7">
+    <div className="px-3 bg-white shadow-sm rounded-xl leading-7">
       {parseStringifiedArray(text) ? (
         <RedditPosts
           posts={JSON.parse(text)}
           handleSummarize={handleSummarize}
         />
       ) : (
-        <Markdown>{text}</Markdown>
+        <Markdown className="markdown">{text}</Markdown>
       )}
     </div>
   );
