@@ -3,7 +3,8 @@ import React, { useState, useEffect } from "react";
 import Overview from "./Overview";
 import Summary from "./Summary";
 import { PhaseItemOverviewProps } from "./Overview";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { setChatMetadata } from "@/lib/features/chat/chatSlice";
 import UserPersona from "@/components/UserPersona";
 import { viewNames } from "@/components/Static";
 import { useRouter } from "next/navigation";
@@ -21,6 +22,7 @@ const Phases = ({
   items: PhaseItemOverviewProps[];
   curProjectId: string;
 }) => {
+  const dispatch = useAppDispatch();
   const currentViewId = useAppSelector((state) => state.general.currentViewId);
   const router = useRouter();
   const [progress, setProgress] = useState<
@@ -72,6 +74,7 @@ const Phases = ({
               className="flex max-w-fit justify-between bg-primary items-center transition hover:bg-darkPrimary text-white font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-lg relative"
               onClick={() => {
                 router.push(`/chat/${curProjectId}/${chatName}`);
+                dispatch(setChatMetadata({ chatId: "", chatName: "" }));
               }}
             >
               {progress === "not-started"

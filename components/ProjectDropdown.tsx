@@ -6,7 +6,7 @@ import { setCurrentProject } from "@/lib/features/project/projectSlice";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 type ProjectDropdown = {
-  openModal: () => void;
+  openModal: (type: "create" | "rename") => void;
   openDeleteModal: () => void;
   setShowDropdown: React.Dispatch<SetStateAction<boolean>>;
 };
@@ -21,11 +21,12 @@ const ProjectDropdown: React.FC<ProjectDropdown> = ({
   );
   const projects = useAppSelector((state) => state.project.projects);
   const dispatch = useAppDispatch();
+
   return (
     <section className="bg-darkBg rounded-lg shadow-lg p-2 mx-2 h-max z-10 relative">
       <button
         className="px-2 py-1 border-none text-primary hover:bg-hoverBg rounded-md w-full text-left"
-        onClick={openModal}
+        onClick={() => openModal("create")}
       >
         Create new project
       </button>
@@ -59,13 +60,10 @@ const ProjectDropdown: React.FC<ProjectDropdown> = ({
           {currentProject?.name}
         </h1>
 
-        <button className="px-2 py-1 hover:bg-hoverBg border-none w-full rounded-md text-left">
-          Invite Collaborator
-        </button>
-        <button className="px-2 py-1 hover:bg-hoverBg border-none w-full rounded-md text-left">
-          Manage Access
-        </button>
-        <button className="px-2 py-1 hover:bg-hoverBg border-none w-full rounded-md text-left">
+        <button
+          className="px-2 py-1 hover:bg-hoverBg border-none w-full rounded-md text-left"
+          onClick={() => openModal("rename")}
+        >
           Rename Project
         </button>
         <button

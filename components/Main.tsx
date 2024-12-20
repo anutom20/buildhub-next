@@ -7,7 +7,7 @@ import {
   setCurrentProject,
   setProjects,
 } from "@/lib/features/project/projectSlice";
-import { useAppDispatch } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import Spinner from "@/components/Spinner";
 import { HiMenu } from "react-icons/hi";
 
@@ -15,12 +15,18 @@ const Main = ({ user }: { user: any }) => {
   const [loading, setLoading] = useState(true);
   const dispatch = useAppDispatch();
 
+  const currentProject = useAppSelector(
+    (state) => state.project.currentProject
+  );
+
   const [showSidebar, setShowSidebar] = useState(false);
   const fetchAllProjects = async () => {
     try {
       const response = await axios.get("/api/project/all");
-      if (!response?.data?.projects?.[0]) return;
-      dispatch(setCurrentProject(response?.data?.projects?.[0]));
+      if (!response?.data?.projects?.[0]) {
+      }
+      if (!currentProject?.id)
+        dispatch(setCurrentProject(response?.data?.projects?.[0]));
       dispatch(setProjects(response?.data?.projects));
     } catch (err) {
       console.log(err);
@@ -31,7 +37,7 @@ const Main = ({ user }: { user: any }) => {
 
   useEffect(() => {
     fetchAllProjects();
-  }, []);
+  }, [currentProject?.id, currentProject?.name]);
 
   if (loading) return <Spinner />;
 

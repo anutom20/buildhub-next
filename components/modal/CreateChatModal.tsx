@@ -1,4 +1,5 @@
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { setChatMetadata } from "@/lib/features/chat/chatSlice";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Router from "next/router";
@@ -15,6 +16,7 @@ const CreateChatModal: React.FC<{
   const currentProject = useAppSelector(
     (state) => state.project.currentProject
   );
+  const dispatch = useAppDispatch();
 
   console.log("inside create chat modal");
 
@@ -56,18 +58,23 @@ const CreateChatModal: React.FC<{
           >
             Cancel
           </button>
-          <Link
-            href={{
-              pathname: `/chat/${currentProject?.id}/${name}/${useMemory}`,
-              query: { initialPrompt: initialPrompt ?? "" },
+          <button
+            onClick={() => {
+              if (!error) {
+                window.location.href = `/chat/${
+                  currentProject?.id
+                }/${name}/${useMemory}?initialPrompt=${initialPrompt ?? ""}`;
+                cancelModal();
+                dispatch(setChatMetadata({ chatId: "", chatName: "" }));
+              }
             }}
             className={`bg-primary hover:bg-darkPrimary text-white py-2 px-4 rounded ${
               error ? "opacity-50 cursor-not-allowed" : ""
             }`}
-            onClick={error ? (e) => e.preventDefault() : cancelModal}
+            disabled={!!error}
           >
             Create
-          </Link>
+          </button>
         </div>
       </div>
     </div>

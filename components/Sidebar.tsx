@@ -1,6 +1,6 @@
 "use client";
 import ProjectDropdown from "./ProjectDropdown";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Menu from "./Menu";
 import { IoChevronDownOutline } from "react-icons/io5";
 import {
@@ -11,16 +11,16 @@ import {
 
 import User from "./User";
 import { useClickOutside } from "@/hooks/useClickOutside";
-import CreateProjectModal from "./modal/CreateProjectModal";
+import ProjectModal from "./modal/ProjectModal";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import DeleteProjectModal from "./modal/DeleteProjectModal";
+import { useAppSelector } from "@/lib/hooks";
 
 type Sidebar = {
   user: any;
   showSidebar: boolean;
   setShowSidebar: (showSidebar: boolean) => void;
 };
-import { useAppSelector } from "@/lib/hooks";
 
 const Sidebar: React.FC<Sidebar> = ({ user, showSidebar, setShowSidebar }) => {
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
@@ -28,18 +28,36 @@ const Sidebar: React.FC<Sidebar> = ({ user, showSidebar, setShowSidebar }) => {
     useState<boolean>(false);
   const [showDeleteProjectModal, setShowDeleteProjectModal] =
     useState<boolean>(false);
+  const [projectModalType, setProjectModalType] = useState<"create" | "rename">(
+    "create"
+  );
 
   const currentProject = useAppSelector((state) => {
     return state.project.currentProject;
   });
 
+  const projects = useAppSelector((state) => {
+    return state.project.projects;
+  });
+
+  console.log(currentProject);
+
   const cancelModal = () => setShowCreateProjectModal(false);
   const cancelDeleteModal = () => setShowDeleteProjectModal(false);
-  const openModal = () => setShowCreateProjectModal(true);
+
+  const openModal = (type: "create" | "rename") => {
+    setShowCreateProjectModal(true);
+    setProjectModalType(type);
+  };
+
   const openDeleteModal = () => setShowDeleteProjectModal(true);
 
   const dropdownRef = useRef(null);
   useClickOutside(dropdownRef, () => setShowDropdown(false));
+
+  useEffect(() => {
+    if (!projects || projects?.length === 0) openModal("create");
+  }, [projects]);
 
   return (
     <section
@@ -87,7 +105,7 @@ const Sidebar: React.FC<Sidebar> = ({ user, showSidebar, setShowSidebar }) => {
         </div>
       </div>
       {showCreateProjectModal && (
-        <CreateProjectModal cancelModal={cancelModal} />
+        <ProjectModal cancelModal={cancelModal} type={projectModalType} />
       )}
       {showDeleteProjectModal && (
         <DeleteProjectModal

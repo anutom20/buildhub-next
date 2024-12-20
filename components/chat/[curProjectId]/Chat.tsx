@@ -29,6 +29,7 @@ import { ToastContainer, toast } from "react-toastify";
 import Confetti from "react-confetti";
 import "react-toastify/dist/ReactToastify.css";
 import { useSearchParams } from "next/navigation";
+import Spinner from "@/components/Spinner";
 
 const Chat = ({
   params,
@@ -54,6 +55,7 @@ const Chat = ({
   const dispatch = useAppDispatch();
 
   let chatName = params.slug[1].replace(/%20/g, " ");
+  const currentProjectIdQueryParam = params.slug[0];
 
   if (chatName?.includes(" ")) {
     chatName = chatName
@@ -121,7 +123,7 @@ const Chat = ({
       console.log("setting chat messages to empty array");
       dispatch(setChatMessages([]));
     }
-  }, [chatId]);
+  }, [chatId, chatName]);
 
   useEffect(() => {
     if (
@@ -171,7 +173,7 @@ const Chat = ({
       const curProject = response?.data?.projects?.filter(
         (project: any) => project.id === curProjectId
       );
-      dispatch(setCurrentProject(curProject[0]));
+      if (!currentProject?.id) dispatch(setCurrentProject(curProject[0]));
       fetchChatMetadata(curProjectId, chatName);
     } catch (err) {
       console.log(err);
@@ -215,6 +217,8 @@ const Chat = ({
       dispatch(setChatMessages([initialChatMessage["mVPLaunch"]]));
     } else if (chatName === viewNames.POST_LAUNCH) {
       dispatch(setChatMessages([initialChatMessage["postLaunch"]]));
+    } else {
+      dispatch(setChatMessages([]));
     }
   };
 
@@ -364,7 +368,7 @@ const Chat = ({
           prompt,
           chatName,
           includeProjectHistory,
-          projectId: currentProject?.id,
+          projectId: currentProjectIdQueryParam,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -434,7 +438,7 @@ const Chat = ({
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Spinner />;
 
   return (
     <div>
