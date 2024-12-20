@@ -178,7 +178,7 @@ async function* readStreamFromGemini(
   }
 }
 
-export const makeStream = <T extends string>(
+const makeStream = <T extends string>(
   generator: AsyncGenerator<T, void, unknown>
 ) => {
   const encoder = new TextEncoder();
