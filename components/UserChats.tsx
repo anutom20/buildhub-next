@@ -7,8 +7,13 @@ import axios from "axios";
 import { useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 
-const UserChats = () => {
-  const [modalOpen, setModalOpen] = useState(false);
+const UserChats = ({
+  showCreateChatModal,
+  setShowCreateChatModal,
+}: {
+  showCreateChatModal: boolean;
+  setShowCreateChatModal: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
   const [chats, setChats] = useState<
     { date: string; time: string; title: string }[]
   >([]);
@@ -69,7 +74,7 @@ const UserChats = () => {
   }, [currentProject?.id]);
 
   const cancelModal = () => {
-    setModalOpen(false);
+    setShowCreateChatModal(false);
   };
 
   if (loading) {
@@ -99,7 +104,7 @@ const UserChats = () => {
         </div>
         <button
           className="bg-primary text-white px-6 hover:bg-darkPrimary py-2 rounded mb-4"
-          onClick={() => setModalOpen(true)}
+          onClick={() => setShowCreateChatModal(true)}
         >
           {windowWidth < 768
             ? "+"
@@ -161,7 +166,7 @@ const UserChats = () => {
             ))}
           </div>
         ))}
-      {modalOpen && <CreateChatModal cancelModal={cancelModal} />}
+      {showCreateChatModal && <CreateChatModal cancelModal={cancelModal} />}
     </div>
   );
 };

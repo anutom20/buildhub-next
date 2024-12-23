@@ -20,9 +20,15 @@ type Sidebar = {
   user: any;
   showSidebar: boolean;
   setShowSidebar: (showSidebar: boolean) => void;
+  showCreateChatModal: boolean;
 };
 
-const Sidebar: React.FC<Sidebar> = ({ user, showSidebar, setShowSidebar }) => {
+const Sidebar: React.FC<Sidebar> = ({
+  user,
+  showSidebar,
+  setShowSidebar,
+  showCreateChatModal,
+}) => {
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [showCreateProjectModal, setShowCreateProjectModal] =
     useState<boolean>(false);
@@ -63,7 +69,13 @@ const Sidebar: React.FC<Sidebar> = ({ user, showSidebar, setShowSidebar }) => {
     <section
       className={`w-[340px] ${
         showSidebar ? "block" : "hidden"
-      } xl:block min-h-screen h-[100vh] overflow-y-auto flex flex-col bg-[#f9f9f9] shadow-md relative`}
+      } xl:block min-h-screen h-[100vh] overflow-y-auto flex flex-col bg-[#f9f9f9] shadow-md relative ${
+        !showCreateChatModal &&
+        !showCreateProjectModal &&
+        !showDeleteProjectModal
+          ? "z-50"
+          : ""
+      }`}
     >
       <div className="p-4 flex justify-between">
         <h2 className="text-primary font-semibold text-xl">Makerhub</h2>

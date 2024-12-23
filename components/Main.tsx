@@ -13,6 +13,8 @@ import { HiMenu } from "react-icons/hi";
 
 const Main = ({ user }: { user: any }) => {
   const [loading, setLoading] = useState(true);
+  const [showCreateChatModal, setShowCreateChatModal] =
+    useState<boolean>(false);
   const dispatch = useAppDispatch();
 
   const currentProject = useAppSelector(
@@ -51,14 +53,19 @@ const Main = ({ user }: { user: any }) => {
       >
         <HiMenu size={24} className="text-darkCharcoal font-bold" />
       </div>
-      <div className="absolute xl:static top-0 left-0 z-50">
+      <div className="absolute xl:static top-0 left-0">
         <Sidebar
           user={user}
           showSidebar={showSidebar}
           setShowSidebar={setShowSidebar}
+          showCreateChatModal={showCreateChatModal}
         />
       </div>
-      <MainSection userName={user?.name} />
+      <MainSection
+        userName={user?.name}
+        showCreateChatModal={showCreateChatModal}
+        setShowCreateChatModal={setShowCreateChatModal}
+      />
     </main>
   );
 };

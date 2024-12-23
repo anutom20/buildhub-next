@@ -7,7 +7,15 @@ import CentralContextBank from "./CentralContextBank";
 import MainOverview from "./main/MainOverview";
 import UserChats from "./UserChats";
 
-const MainSection = ({ userName }: { userName: string }) => {
+const MainSection = ({
+  userName,
+  showCreateChatModal,
+  setShowCreateChatModal,
+}: {
+  userName: string;
+  showCreateChatModal: boolean;
+  setShowCreateChatModal: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
   const currentViewId = useAppSelector((state) => state.general.currentViewId);
   const currentProject = useAppSelector(
     (state) => state.project.currentProject
@@ -83,7 +91,10 @@ const MainSection = ({ userName }: { userName: string }) => {
       ) : currentViewId === viewNames.OVERVIEW ? (
         <MainOverview name={userName} />
       ) : currentViewId === viewNames.CHATS ? (
-        <UserChats />
+        <UserChats
+          showCreateChatModal={showCreateChatModal}
+          setShowCreateChatModal={setShowCreateChatModal}
+        />
       ) : null}
     </main>
   );
