@@ -6,6 +6,7 @@ import UserChat from "@/components/chat/UserChat";
 import { IoArrowUpCircle } from "react-icons/io5";
 import axios from "axios";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { IoMicOutline } from "react-icons/io5";
 import {
   setCurrentProject,
   setProjects,
@@ -99,7 +100,49 @@ const Chat = ({
 
   const router = useRouter();
 
-  console.log("input", input);
+  console.log("Current input value:", input);
+
+  const [recognition, setRecognition] = useState<any>(null);
+  const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    if ("webkitSpeechRecognition" in window) {
+      const speechRecognition = new (window as any).webkitSpeechRecognition();
+      speechRecognition.continuous = false;
+      speechRecognition.interimResults = true;
+      speechRecognition.lang = "en-US";
+
+      speechRecognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0])
+          .map((result: any) => result.transcript)
+          .join("");
+        setInput(transcript);
+        if (chatDivRef.current) {
+          chatDivRef.current.innerText = transcript;
+        }
+      };
+
+      speechRecognition.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+      };
+
+      setRecognition(speechRecognition);
+    } else {
+      console.warn("Speech recognition not supported in this browser.");
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (recognition) {
+      if (isListening) {
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
+      setIsListening(!isListening);
+    }
+  };
 
   useEffect(() => {
     if (currentProject?.id) {
@@ -334,6 +377,8 @@ const Chat = ({
     postUrl: string = ""
   ) => {
     e.preventDefault();
+    recognition?.stop();
+    setIsListening(false);
     setBotMessageCompleted(false);
     setUpdateSummary(false);
     setErrorMessage(null);
@@ -521,7 +566,9 @@ const Chat = ({
             <div
               ref={chatDivRef}
               contentEditable
-              data-placeholder="Type your message here..."
+              data-placeholder={`${
+                isListening ? "Listening..." : "Type your message here..."
+              }`}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   sendMessage(e);
@@ -533,6 +580,15 @@ const Chat = ({
               className="bg-chatInput border pr-12 border-gray-300 text-md rounded-lg focus:outline-none focus:border-gray-400 focus:border w-full p-2.5"
             ></div>
           </div>
+          <button
+            type="button"
+            onClick={toggleListening}
+            className={`absolute right-16 top-3 ${
+              isListening ? "text-red-500" : "text-primary"
+            }`}
+          >
+            <IoMicOutline size={24} />
+          </button>
           <button
             type="submit"
             className="absolute right-5 top-2"
